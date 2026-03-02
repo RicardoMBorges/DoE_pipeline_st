@@ -583,6 +583,7 @@ If you use this app for academic work, consider citing:
 
 * the GitHub repository
 * LAABio\IPPN-UFRJ
-* by Ricardo M Borges
+
+by Ricardo M Borges (LAABio\IPPN-UFRJ)
 
 ---
