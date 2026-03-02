@@ -40,7 +40,7 @@ if laabio_logo.exists():
 if doe_logo.exists():
     try:
         with col_center:
-            st.image(Image.open(doe_logo), width=150)
+            st.image(Image.open(doe_logo), width=200)
     except Exception:
         pass
 
@@ -974,6 +974,7 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
 
