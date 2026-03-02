@@ -1,6 +1,6 @@
 # DoE_pipeline_st
+Interactive Design of Experiments (DoE) pipeline for planning, visualizing, and exporting experimental designs in scientific workflows.
 
-Interactive Design of Experiments (DoE) pipeline built with Streamlit.
 
 This tool allows users to:
 
