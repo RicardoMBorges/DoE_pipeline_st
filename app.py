@@ -624,7 +624,7 @@ It guarantees:
 # STEP 2 — RESULTS (SIDEBAR)
 # ----------------------------------------------------------
 
-st.sidebar.header("Upload Results (After creating the Experimental Design)")
+st.sidebar.header("Upload Results")
 
 # Guard: design must exist
 if st.session_state.get("design") is None:
@@ -1038,4 +1038,5 @@ with tab3:
         for spec in factor_specs:
             cval = best_point[spec["name"]]
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
+
         st.write("Best real conditions:", real_best)
