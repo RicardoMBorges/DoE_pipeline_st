@@ -32,7 +32,7 @@ col_left, col_center, col_right = st.columns([1.2, 2, 1.2])
 if laabio_logo.exists():
     try:
         with col_left:
-            st.image(Image.open(laabio_logo), width=150)
+            st.image(Image.open(laabio_logo), width=200)
     except Exception:
         pass
 
@@ -974,6 +974,7 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
 
