@@ -624,7 +624,7 @@ It guarantees:
 # STEP 2 — RESULTS (SIDEBAR)
 # ----------------------------------------------------------
 
-st.sidebar.header("STEP 2 — Upload Results")
+st.sidebar.header("Upload Results (After creating the Experimental Design)")
 
 # Guard: design must exist
 if st.session_state.get("design") is None:
