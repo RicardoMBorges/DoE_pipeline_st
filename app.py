@@ -43,7 +43,10 @@ if laabio_logo.exists():
     except Exception:
         pass
 
-
+st.sidebar.link_button(
+    "📘 Tutorial (GitHub)",
+    "https://github.com/RicardoMBorges/DoE_pipeline_st/blob/main/tutorial.md"
+)
 
 
 st.title("Design of Experiments (DoE) — Toolkit")
