@@ -28,22 +28,21 @@ doe_logo = STATIC_DIR / "logo_DoE.png"
 
 col_left, col_center, col_right = st.columns([1.2, 2, 1.2])
 
-# Left logo (LAABio)
-if laabio_logo.exists():
-    try:
-        with col_left:
-            st.sidebar.image(Image.open(laabio_logo))
-    except Exception:
-        pass
-
-# Center logo (Main DoE branding)
+# logo (Main DoE branding)
 if doe_logo.exists():
     try:
         with col_center:
             st.sidebar.image(Image.open(doe_logo))
     except Exception:
         pass
-
+        
+# logo (LAABio)
+if laabio_logo.exists():
+    try:
+        with col_left:
+            st.sidebar.image(Image.open(laabio_logo))
+    except Exception:
+        pass
 
 st.title("Design of Experiments (DoE) for Chromatography")
 
@@ -985,4 +984,5 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
 
         st.write("Best real conditions:", real_best)
+
 
