@@ -1,7 +1,6 @@
 # ==========================================================
-# DoE for Chromatography (NumPy-only designs)
+# DoE Toolkit (NumPy-only designs)
 # + Quadratic model + visualization + response surfaces
-# Works with Python 3.12+
 # ==========================================================
 
 import itertools
@@ -13,7 +12,7 @@ import streamlit as st
 from pathlib import Path
 
 # MUST be the first Streamlit call
-st.set_page_config(page_title="DoE Chromatography", layout="wide")
+st.set_page_config(page_title="DoE Toolkit", layout="wide")
 
 # -----------------------------
 # LOGOS — AFTER page config
@@ -28,14 +27,14 @@ doe_logo = STATIC_DIR / "logo_DoE.png"
 
 col_left, col_center, col_right = st.columns([1.2, 2, 1.2])
 
-# logo (Main DoE branding)
+# Center logo (Main DoE branding)
 if doe_logo.exists():
     try:
         with col_center:
             st.sidebar.image(Image.open(doe_logo))
     except Exception:
         pass
-        
+
 # logo (LAABio)
 if laabio_logo.exists():
     try:
@@ -44,22 +43,22 @@ if laabio_logo.exists():
     except Exception:
         pass
 
-st.title("Design of Experiments (DoE) for Chromatography")
+
+
+
+st.title("Design of Experiments (DoE) — Toolkit")
 
 st.markdown("""
-This tool allows you to:
+This app helps you plan and analyze experiments in **any domain** (chemistry, biology, engineering, optimization, etc.).
 
-1. Generate experimental designs
-2. Go to the Lab
+You can:
 
-2.1. Run experiments
-
-2.2. Come back here
-
-3. Upload results
-4. Fit a **quadratic** model (main + interactions + curvature)
+1. Generate experimental designs (factorial, CCD, Box–Behnken, fractional, LHS)
+2. Export a run sheet for the lab/bench
+3. Upload the completed table with measured responses
+4. Fit a **quadratic** model (main effects + interactions + curvature)
 5. Visualize response surfaces (2D contour + 3D surface)
-6. Suggest optimal conditions
+6. Search for **best predicted conditions** and validate experimentally
 """)
 
 # ==========================================================
@@ -293,6 +292,37 @@ Tips:
 """
     )
 
+
+    st.markdown("### Define Response Variables")
+
+    n_responses = st.number_input(
+        "Number of response variables",
+        min_value=1,
+        max_value=5,
+        value=1,
+        step=1,
+        key="n_responses"
+    )
+
+    response_specs = []
+
+    for i in range(n_responses):
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            rname = st.text_input(
+                f"Response name #{i+1}",
+                value=f"Response_{i+1}",
+                key=f"resp_name_{i}"
+            )
+        with col2:
+            goal = st.selectbox(
+                f"Goal",
+                ["Maximize", "Minimize"],
+                key=f"resp_goal_{i}"
+            )
+
+        response_specs.append({"name": rname, "goal": goal})
+
     design_type = st.selectbox(
         "Choose Design Type",
         [
@@ -466,7 +496,15 @@ It guarantees:
             center = st.number_input("Center (0)", value=15.0, key=f"center_{i}")
             high = st.number_input("High (+1)", value=25.0, key=f"high_{i}")
 
-            factor_specs.append({"name": name, "low": low, "center": center, "high": high})
+            if name.strip() == "":
+                st.error("Factor name cannot be empty.")
+            else:
+                factor_specs.append({
+                    "name": name.strip(),
+                    "low": low,
+                    "center": center,
+                    "high": high
+                })
 
             st.caption("Coded values: -1=Low, 0=Center, +1=High (CCD may include ±sqrt(k)).")
 
@@ -485,7 +523,7 @@ It guarantees:
         elif design_type.startswith("3-Level Full"):
             coded = full_factorial_3level(k)  # <-- you will implement this
         elif design_type.startswith("2-Level Fractional"):
-            coded = fractional_factorial_2level(k, base_k, frac_generators)  # <-- implement this
+            coded = fractional_factorial_2level_regular(base_k=base_k, generators=frac_generators)
         elif design_type.startswith("Latin Hypercube"):
             coded = lhs_design(k, lhs_runs, seed=lhs_seed)  # <-- implement this
         else:
@@ -500,9 +538,15 @@ It guarantees:
             real_df[f["name"]] = real_df[f["name"]].apply(lambda v: coded_to_real_value(float(v), f))
 
         real_df.insert(0, "Experiment#", np.arange(1, len(real_df) + 1))
-        real_df["Number of Peaks"] = ""
-        real_df["Run Time"] = ""
+
+        # Add response columns dynamically
+        for r in response_specs:
+            real_df[r["name"]] = ""
+
+        # Add combined result column (modeling target)
         real_df["Results"] = ""
+        
+        st.session_state["response_specs"] = response_specs
 
         st.session_state["coded"] = coded_df
         st.session_state["design"] = real_df
@@ -595,7 +639,8 @@ else:
         df = pd.read_csv(uploaded, sep=";")
 
         # Basic validation
-        required = ["Number of Peaks", "Run Time"]
+        response_specs = st.session_state.get("response_specs", [])
+        required = [r["name"] for r in response_specs]
         missing = [c for c in required if c not in df.columns]
 
         if missing:
@@ -603,54 +648,47 @@ else:
         else:
 
             st.sidebar.markdown("### Compute Results")
-            st.sidebar.caption(
-                "Default logic: more peaks = better; shorter run time = better."
-            )
+            # Initialize score accumulator
+            score = 0.0
 
-            w_peaks = st.sidebar.number_input(
-                "Weight: Peaks (positive)", value=1.0
-            )
+            for r in response_specs:
 
-            w_time = st.sidebar.number_input(
-                "Weight: Run Time (negative)", value=1.0
-            )
+                values = pd.to_numeric(df[r["name"]], errors="coerce")
+                std = float(values.std()) if float(values.std()) != 0.0 else 1.0
+                z = (values - values.mean()) / std
 
-            overwrite = st.sidebar.checkbox(
-                "Overwrite Results column", value=True
-            )
-
-            # Compute results
-            peaks = pd.to_numeric(df["Number of Peaks"], errors="coerce")
-            runtime = pd.to_numeric(df["Run Time"], errors="coerce")
-
-            if peaks.isna().any() or runtime.isna().any():
-                st.sidebar.warning(
-                    "Non-numeric values detected. Invalid rows will be ignored during modeling."
+                weight = st.sidebar.number_input(
+                    f"Weight for {r['name']}",
+                    value=1.0,
+                    key=f"weight_{r['name']}",
                 )
 
-            peaks_std = float(peaks.std()) if float(peaks.std()) != 0.0 else 1.0
-            time_std = float(runtime.std()) if float(runtime.std()) != 0.0 else 1.0
+                if r["goal"] == "Maximize":
+                    score += weight * z
+                else:
+                    score -= weight * z
 
-            peaks_z = (peaks - peaks.mean()) / peaks_std
-            time_z = (runtime - runtime.mean()) / time_std
-
-            results = w_peaks * peaks_z - w_time * time_z
-
-            if overwrite or ("Results" not in df.columns):
-                df["Results"] = results
+            df["Results"] = score
 
             st.session_state["results_df"] = df
             st.sidebar.success("Results computed and stored.")
+            
+            
+            st.session_state["results_df"] = df
+            st.sidebar.success("Results computed and stored.")
 
-    if "results_df" in st.session_state:
+    results_df = st.session_state.get("results_df")
+
+    if results_df is not None and isinstance(results_df, pd.DataFrame) and not results_df.empty:
+
         st.subheader("Preview uploaded data")
-        st.dataframe(st.session_state["results_df"].head(10), use_container_width=True)
+        st.dataframe(results_df.head(10), use_container_width=True)
 
         colA, colB = st.columns(2)
 
         with colA:
             fig = px.histogram(
-                st.session_state["results_df"],
+                results_df,
                 x="Results",
                 nbins=20,
                 title="Results distribution",
@@ -658,14 +696,24 @@ else:
             st.plotly_chart(fig, use_container_width=True)
 
         with colB:
-            fig = px.scatter(
-                st.session_state["results_df"],
-                x="Run Time",
-                y="Number of Peaks",
-                color="Results",
-                title="Peaks vs Run Time (colored by Results)",
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            # choose first response automatically
+            response_cols = [
+                c for c in results_df.columns
+                if c not in ["Experiment#", "Results"]
+            ]
+
+            if len(response_cols) > 0:
+                fig = px.scatter(
+                    results_df,
+                    x=response_cols[0],
+                    y="Results",
+                    color="Results",
+                    title=f"{response_cols[0]} vs Results",
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+    else:
+        st.info("No results uploaded yet (STEP 2 sidebar).")
 
 # ----------------------------------------------------------
 # STEP 3 — MODEL & VISUALIZE
@@ -987,11 +1035,4 @@ with tab3:
         for spec in factor_specs:
             cval = best_point[spec["name"]]
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
-
         st.write("Best real conditions:", real_best)
-
-
-
-
-
-
