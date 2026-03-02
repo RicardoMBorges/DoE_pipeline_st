@@ -1,7 +1,7 @@
-streamlit
-numpy
-pandas
-plotly
-scipy
-scikit-learn
-Pillow
+streamlit>=1.32
+numpy>=1.26
+pandas>=2.0
+plotly>=5.20
+scipy>=1.11
+scikit-learn>=1.4
+Pillow>=10.0
