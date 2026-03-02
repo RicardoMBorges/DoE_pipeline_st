@@ -582,6 +582,7 @@ Fix:
 If you use this app for academic work, consider citing:
 
 * the GitHub repository
-* your lab/institution (IPPN-UFRJ / LAABio / LabMAS / LabCrom, etc.)
+* LAABio\IPPN-UFRJ
+* by Ricardo M Borges
 
 ---
