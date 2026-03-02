@@ -50,7 +50,7 @@ st.markdown("""
 This tool allows you to:
 
 1. Generate experimental designs
-2. Run experiments
+    2. Run experiments
 3. Upload results
 4. Fit a **quadratic** model (main + interactions + curvature)
 5. Visualize response surfaces (2D contour + 3D surface)
@@ -984,5 +984,6 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
