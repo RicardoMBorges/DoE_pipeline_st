@@ -24,9 +24,10 @@ logo_path = STATIC_DIR / "LAABio.png"
 if logo_path.exists():
     try:
         from PIL import Image
-        st.image(Image.open(logo_path), use_container_width=True)
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            st.image(Image.open(logo_path), width=400)
     except Exception:
-        # If Pillow isn't installed or image can't be opened, just ignore.
         pass
 
 st.title("Design of Experiments (DoE) for Chromatography")
@@ -955,4 +956,5 @@ with tab3:
         for spec in factor_specs:
             cval = best_point[spec["name"]]
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
+
         st.write("Best real conditions:", real_best)
