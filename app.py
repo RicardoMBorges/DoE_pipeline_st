@@ -16,17 +16,19 @@ from pathlib import Path
 st.set_page_config(page_title="DoE Chromatography", layout="wide")
 
 # -----------------------------
-# LOGOs (optional) — AFTER page config
+# LOGO — AFTER page config
 # -----------------------------
+from pathlib import Path
+from PIL import Image
+
 STATIC_DIR = Path(__file__).parent / "static"
-logo_path = STATIC_DIR / "LAABio.png"
+logo_path = STATIC_DIR / "lofo_DoE.png"  # <- rename file to something clean
 
 if logo_path.exists():
     try:
-        from PIL import Image
-        col1, col2, col3 = st.columns([1,2,1])
+        col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.image(Image.open(logo_path), width=400)
+            st.image(Image.open(logo_path), width=280)  # 280–320 is ideal
     except Exception:
         pass
 
@@ -958,3 +960,4 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
 
         st.write("Best real conditions:", real_best)
+
