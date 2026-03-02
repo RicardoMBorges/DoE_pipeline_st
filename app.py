@@ -16,21 +16,35 @@ from pathlib import Path
 st.set_page_config(page_title="DoE Chromatography", layout="wide")
 
 # -----------------------------
-# LOGO — AFTER page config
+# LOGOS — AFTER page config
 # -----------------------------
 from pathlib import Path
 from PIL import Image
 
 STATIC_DIR = Path(__file__).parent / "static"
-logo_path = STATIC_DIR / "logo_DoE.png"  # <- rename file to something clean
 
-if logo_path.exists():
+laabio_logo = STATIC_DIR / "LAABio.png"
+doe_logo = STATIC_DIR / "logo_DoE.png"
+
+col_left, col_center, col_right = st.columns([1.2, 2, 1.2])
+
+# Left logo (LAABio)
+if laabio_logo.exists():
     try:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.image(Image.open(logo_path), width=280)  # 280–320 is ideal
+        with col_left:
+            st.image(Image.open(laabio_logo), width=150)
     except Exception:
         pass
+
+# Center logo (Main DoE branding)
+if doe_logo.exists():
+    try:
+        with col_center:
+            st.image(Image.open(doe_logo), width=260)
+    except Exception:
+        pass
+
+# Right column intentionally empty for symmetry
 
 st.title("Design of Experiments (DoE) for Chromatography")
 
@@ -960,5 +974,6 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
