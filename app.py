@@ -32,7 +32,7 @@ col_left, col_center, col_right = st.columns([1.2, 2, 1.2])
 if laabio_logo.exists():
     try:
         with col_left:
-            st.image(Image.open(laabio_logo), width=100)
+            st.sidebar.image(Image.open(laabio_logo))
     except Exception:
         pass
 
@@ -44,7 +44,6 @@ if doe_logo.exists():
     except Exception:
         pass
 
-# Right column intentionally empty for symmetry
 
 st.title("Design of Experiments (DoE) for Chromatography")
 
@@ -571,86 +570,98 @@ It guarantees:
         st.info("Generate a design to see the experimental table.")
 
 # ----------------------------------------------------------
-# STEP 2 — RESULTS
+# STEP 2 — RESULTS (SIDEBAR)
 # ----------------------------------------------------------
-with tab2:
-    st.header("STEP 2 — Upload Completed CSV & Compute Results")
 
-    # Guard: you must have generated a design first
-    if st.session_state.get("design") is None:
-        st.info("Generate the design in STEP 1 first.")
-        st.stop()
+st.sidebar.header("STEP 2 — Upload Results")
 
-    # Upload
-    uploaded = st.file_uploader("Upload Completed CSV (separator ';')", type=["csv"])
+# Guard: design must exist
+if st.session_state.get("design") is None:
+    st.sidebar.info("Generate the design in STEP 1 first.")
+else:
 
-    if uploaded is None:
-        st.info("Upload the CSV you downloaded from STEP 1 (filled with Number of Peaks and Run Time).")
-        st.stop()
+    uploaded = st.sidebar.file_uploader(
+        "Upload Completed CSV (separator ';')",
+        type=["csv"],
+        key="results_upload",
+    )
 
-    df = pd.read_csv(uploaded, sep=";")
+    if uploaded is not None:
 
-    # Basic validation
-    required = ["Number of Peaks", "Run Time"]
-    missing = [c for c in required if c not in df.columns]
-    if missing:
-        st.error(f"Missing columns: {missing}")
-        st.stop()
+        df = pd.read_csv(uploaded, sep=";")
 
-    st.subheader("Preview uploaded data")
-    st.dataframe(df.head(10), use_container_width=True)
+        # Basic validation
+        required = ["Number of Peaks", "Run Time"]
+        missing = [c for c in required if c not in df.columns]
 
-    st.markdown("### Define how to compute **Results**")
-    st.caption("Default: more peaks = better; shorter run time = better.")
+        if missing:
+            st.sidebar.error(f"Missing columns: {missing}")
+        else:
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        w_peaks = st.number_input("Weight: Peaks (positive)", value=1.0)
-    with c2:
-        w_time = st.number_input("Weight: Run Time (negative)", value=1.0)
-    with c3:
-        overwrite = st.checkbox("Overwrite Results column", value=True)
+            st.sidebar.markdown("### Compute Results")
+            st.sidebar.caption(
+                "Default logic: more peaks = better; shorter run time = better."
+            )
 
-    # Compute results
-    peaks = pd.to_numeric(df["Number of Peaks"], errors="coerce")
-    runtime = pd.to_numeric(df["Run Time"], errors="coerce")
+            w_peaks = st.sidebar.number_input(
+                "Weight: Peaks (positive)", value=1.0
+            )
 
-    if peaks.isna().any() or runtime.isna().any():
-        st.warning(
-            "Some values in Number of Peaks or Run Time are missing/non-numeric. "
-            "Those rows will be ignored later when fitting the model."
-        )
+            w_time = st.sidebar.number_input(
+                "Weight: Run Time (negative)", value=1.0
+            )
 
-    peaks_std = float(peaks.std()) if float(peaks.std()) != 0.0 else 1.0
-    time_std = float(runtime.std()) if float(runtime.std()) != 0.0 else 1.0
+            overwrite = st.sidebar.checkbox(
+                "Overwrite Results column", value=True
+            )
 
-    peaks_z = (peaks - peaks.mean()) / peaks_std
-    time_z = (runtime - runtime.mean()) / time_std
+            # Compute results
+            peaks = pd.to_numeric(df["Number of Peaks"], errors="coerce")
+            runtime = pd.to_numeric(df["Run Time"], errors="coerce")
 
-    results = w_peaks * peaks_z - w_time * time_z
+            if peaks.isna().any() or runtime.isna().any():
+                st.sidebar.warning(
+                    "Non-numeric values detected. Invalid rows will be ignored during modeling."
+                )
 
-    if overwrite or ("Results" not in df.columns):
-        df["Results"] = results
+            peaks_std = float(peaks.std()) if float(peaks.std()) != 0.0 else 1.0
+            time_std = float(runtime.std()) if float(runtime.std()) != 0.0 else 1.0
 
-    st.session_state["results_df"] = df
-    st.success("Results computed and stored.")
+            peaks_z = (peaks - peaks.mean()) / peaks_std
+            time_z = (runtime - runtime.mean()) / time_std
 
-    st.subheader("Quick plots (raw)")
-    colA, colB = st.columns(2)
+            results = w_peaks * peaks_z - w_time * time_z
 
-    with colA:
-        fig = px.histogram(df, x="Results", nbins=20, title="Results distribution")
-        st.plotly_chart(fig, use_container_width=True)
+            if overwrite or ("Results" not in df.columns):
+                df["Results"] = results
 
-    with colB:
-        fig = px.scatter(
-            df,
-            x="Run Time",
-            y="Number of Peaks",
-            color="Results",
-            title="Peaks vs Run Time (colored by Results)",
-        )
-        st.plotly_chart(fig, use_container_width=True)
+            st.session_state["results_df"] = df
+            st.sidebar.success("Results computed and stored.")
+
+    if "results_df" in st.session_state:
+        st.subheader("Preview uploaded data")
+        st.dataframe(st.session_state["results_df"].head(10), use_container_width=True)
+
+        colA, colB = st.columns(2)
+
+        with colA:
+            fig = px.histogram(
+                st.session_state["results_df"],
+                x="Results",
+                nbins=20,
+                title="Results distribution",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        with colB:
+            fig = px.scatter(
+                st.session_state["results_df"],
+                x="Run Time",
+                y="Number of Peaks",
+                color="Results",
+                title="Peaks vs Run Time (colored by Results)",
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
 # ----------------------------------------------------------
 # STEP 3 — MODEL & VISUALIZE
@@ -972,12 +983,4 @@ with tab3:
         for spec in factor_specs:
             cval = best_point[spec["name"]]
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
-
         st.write("Best real conditions:", real_best)
-
-
-
-
-
-
-
