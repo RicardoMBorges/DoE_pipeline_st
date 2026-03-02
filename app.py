@@ -22,7 +22,7 @@ from pathlib import Path
 from PIL import Image
 
 STATIC_DIR = Path(__file__).parent / "static"
-logo_path = STATIC_DIR / "lofo_DoE.png"  # <- rename file to something clean
+logo_path = STATIC_DIR / "logo_DoE.png"  # <- rename file to something clean
 
 if logo_path.exists():
     try:
@@ -960,4 +960,5 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(cval, spec)
 
         st.write("Best real conditions:", real_best)
+
 
