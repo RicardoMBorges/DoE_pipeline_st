@@ -1394,11 +1394,10 @@ with tab3:
             simplices = tri.simplices.astype(int)
 
             st.markdown("### 3D Response Surface (Ternary)")
-            turbo_scale = pc.sequential.Turbo
-            turbo_plotly = pc.make_colorscale(turbo_scale)
+            SAFE_SCALE = pc.make_colorscale(pc.sequential.Viridis)  # robust on old Plotly
             fig3d = ff.create_trisurf(
                 x=xs, y=ys, z=zs,
-                colormap=turbo_scale,   # <- AQUI
+                colormap=pc.sequential.Viridis,
                 simplices=simplices,
                 title="Predicted response surface (ternary mixture)",
                 show_colorbar=True,
@@ -1422,7 +1421,7 @@ with tab3:
                 go.Scatter(
                     x=xs, y=ys,
                     mode="markers",
-                    marker=dict(size=8, color=zs, colorscale="Turbo", cmin=cmin, cmax=cmax, showscale=True),
+                    marker=dict(size=8, color=zs.astype(float), colorscale=SAFE_SCALE, cmin=cmin, cmax=cmax, showscale=True),
                     text=[
                         f"{mix_cols[0]}={grid_df.iloc[i][mix_cols[0]]:.3f}<br>"
                         f"{mix_cols[1]}={grid_df.iloc[i][mix_cols[1]]:.3f}<br>"
@@ -1698,6 +1697,7 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
 
