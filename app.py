@@ -1279,6 +1279,18 @@ with tab3:
             st.stop()
 
         df = df_state.copy()
+        # ---- Guard: results_df must contain the mixture fraction columns ----
+        missing_mix_cols = [c for c in (mix_cols or []) if c not in df.columns]
+        if missing_mix_cols:
+            st.error(
+                "Your current 'results_df' does not match the Mixture design.\n\n"
+                f"Missing mixture columns: {missing_mix_cols}\n\n"
+                "✅ Do this:\n"
+                "1) Go to STEP 1 (Mixture) and generate the design\n"
+                "2) Upload the completed mixture CSV in the sidebar\n"
+                "3) Make sure the solvent columns names match exactly\n"
+            )
+            st.stop()
 
         # keep only rows with finite Results + finite mixture fractions
         y = pd.to_numeric(df["Results"], errors="coerce").to_numpy(dtype=float)
@@ -1684,3 +1696,4 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
 
         st.write("Best real conditions:", real_best)
+
