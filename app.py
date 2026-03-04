@@ -1416,7 +1416,7 @@ with tab3:
                 go.Scatter(
                     x=xs, y=ys,
                     mode="markers",
-                    marker=dict(size=8, color=zs, colorscale=turbo_plotly,cmin=cmin,cmax=cmax,showscale=True),
+                    marker=dict(size=8, color=zs, colorscale="Turbo", cmin=cmin, cmax=cmax, showscale=True),
                     text=[
                         f"{mix_cols[0]}={grid_df.iloc[i][mix_cols[0]]:.3f}<br>"
                         f"{mix_cols[1]}={grid_df.iloc[i][mix_cols[1]]:.3f}<br>"
@@ -1692,5 +1692,6 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
