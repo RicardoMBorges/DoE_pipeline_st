@@ -70,6 +70,32 @@ You can:
 # DESIGN GENERATORS (Pure NumPy)
 # ==========================================================
 
+def add_ols_line_numpy(fig, x, y, name="OLS (NumPy)"):
+    """
+    Adds a simple least-squares line y = m*x + b to an existing Plotly figure.
+    Works without statsmodels.
+    """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    ok = np.isfinite(x) & np.isfinite(y)
+
+    if ok.sum() < 2:
+        return fig  # not enough points
+
+    m, b = np.polyfit(x[ok], y[ok], 1)
+    xs = np.array([np.min(x[ok]), np.max(x[ok])], dtype=float)
+    ys = m * xs + b
+
+    fig.add_trace(
+        go.Scatter(
+            x=xs,
+            y=ys,
+            mode="lines",
+            name=name,
+        )
+    )
+    return fig
+
 def full_factorial_2level(k: int) -> np.ndarray:
     return np.array(list(itertools.product([-1, 1], repeat=k)), dtype=float)
 
@@ -1287,9 +1313,10 @@ with tab3:
         st.subheader("Observed vs Predicted")
         ovp = pd.DataFrame({"Observed": df_fit["Results"].to_numpy(dtype=float), "Predicted": yhat})
         fig_ovp = px.scatter(
-            ovp, x="Observed", y="Predicted", trendline="ols",
+            ovp, x="Observed", y="Predicted",
             title="Observed vs Predicted (Mixture)"
         )
+        fig_ovp = add_ols_line_numpy(fig_ovp, ovp["Observed"], ovp["Predicted"])
         st.plotly_chart(fig_ovp, use_container_width=True)
         download_plotly_html(fig_ovp, "mixture_observed_vs_predicted.html", "Download as HTML")
 
@@ -1480,7 +1507,8 @@ with tab3:
 
     st.subheader("Observed vs Predicted")
     ovp = pd.DataFrame({"Observed": df_fit["Results"].to_numpy(dtype=float), "Predicted": yhat})
-    fig = px.scatter(ovp, x="Observed", y="Predicted", trendline="ols", title="Observed vs Predicted")
+    fig = px.scatter(ovp, x="Observed", y="Predicted", title="Observed vs Predicted")
+    fig = add_ols_line_numpy(fig, ovp["Observed"], ovp["Predicted"])
     st.plotly_chart(fig, use_container_width=True)
     download_plotly_html(fig, "observed_vs_predicted.html", "Download as HTML")
 
@@ -1654,4 +1682,5 @@ with tab3:
         real_best = {}
         for spec in factor_specs:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
+
         st.write("Best real conditions:", real_best)
