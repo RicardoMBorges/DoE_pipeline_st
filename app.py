@@ -1389,11 +1389,7 @@ with tab3:
 
             st.markdown("### 3D Response Surface (Ternary)")
             turbo_scale = pc.sequential.Turbo
-            turbo_plotly = [
-                [i / (len(turbo_scale) - 1), f"rgb({int(r*255)},{int(g*255)},{int(b*255)})"]
-                for i, (r, g, b) in enumerate(turbo_scale)
-            ]
-
+            turbo_plotly = pc.make_colorscale(turbo_scale)
             fig3d = ff.create_trisurf(
                 x=xs, y=ys, z=zs,
                 colormap=turbo_scale,   # <- AQUI
@@ -1696,4 +1692,5 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
 
         st.write("Best real conditions:", real_best)
+
 
