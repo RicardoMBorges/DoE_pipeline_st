@@ -1394,7 +1394,13 @@ with tab3:
             simplices = tri.simplices.astype(int)
 
             st.markdown("### 3D Response Surface (Ternary)")
-            SAFE_SCALE = pc.get_colorscale("Viridis")
+            SAFE_SCALE = [
+                [0.0, "#440154"],
+                [0.25, "#3b528b"],
+                [0.5, "#21918c"],
+                [0.75, "#5ec962"],
+                [1.0, "#fde725"],
+            ]
             # force strict validator-friendly format: list of [float, str]
             SAFE_SCALE = [[float(p), str(c)] for p, c in SAFE_SCALE]
             fig3d = ff.create_trisurf(
@@ -1699,6 +1705,7 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
 
