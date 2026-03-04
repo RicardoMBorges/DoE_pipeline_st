@@ -1394,7 +1394,9 @@ with tab3:
             simplices = tri.simplices.astype(int)
 
             st.markdown("### 3D Response Surface (Ternary)")
-            SAFE_SCALE = pc.make_colorscale(pc.sequential.Viridis)  # robust on old Plotly
+            SAFE_SCALE = pc.get_colorscale("Viridis")
+            # force strict validator-friendly format: list of [float, str]
+            SAFE_SCALE = [[float(p), str(c)] for p, c in SAFE_SCALE]
             fig3d = ff.create_trisurf(
                 x=xs, y=ys, z=zs,
                 colormap=pc.sequential.Viridis,
@@ -1421,7 +1423,7 @@ with tab3:
                 go.Scatter(
                     x=xs, y=ys,
                     mode="markers",
-                    marker=dict(size=8, color=zs.astype(float), colorscale=SAFE_SCALE, cmin=cmin, cmax=cmax, showscale=True),
+                    marker=dict(size=8, color=np.asarray(zs, dtype=float), colorscale=SAFE_SCALE, cmin=cmin, cmax=cmax, showscale=True),
                     text=[
                         f"{mix_cols[0]}={grid_df.iloc[i][mix_cols[0]]:.3f}<br>"
                         f"{mix_cols[1]}={grid_df.iloc[i][mix_cols[1]]:.3f}<br>"
@@ -1697,6 +1699,7 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
 
