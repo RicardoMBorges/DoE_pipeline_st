@@ -1378,9 +1378,15 @@ with tab3:
 
             xs = np.asarray(xs, dtype=float)
             ys = np.asarray(ys, dtype=float)
+
             zs = grid_df["Predicted"].to_numpy(dtype=float)
-            cmin = float(np.nanmin(zs))
-            cmax = float(np.nanmax(zs))
+            finite = np.isfinite(zs)
+            if finite.sum() == 0:
+                st.error("All predicted values are NaN/Inf. Check that your uploaded Results column is numeric.")
+                st.stop()
+            
+            cmin = float(np.min(zs[finite]))
+            cmax = float(np.max(zs[finite]))
 
             # --- triangulation (INTEGER indices)
             pts2 = np.column_stack([xs, ys])
@@ -1692,6 +1698,7 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
 
