@@ -1402,10 +1402,12 @@ with tab3:
                 [1.0, "#fde725"],
             ]
             # force strict validator-friendly format: list of [float, str]
-            #SAFE_SCALE = [[float(p), str(c)] for p, c in SAFE_SCALE]
+            SAFE_SCALE = [[float(p), str(c)] for p, c in SAFE_SCALE]
+            # trisurf needs ONLY the colors (no positions)
+            TRI_COLORS = [c for _, c in SAFE_SCALE]
             fig3d = ff.create_trisurf(
                 x=xs, y=ys, z=zs,
-                colormap=pc.sequential.Viridis,
+                colormap=TRI_COLORS,
                 simplices=simplices,
                 title="Predicted response surface (ternary mixture)",
                 show_colorbar=True,
@@ -1705,6 +1707,7 @@ with tab3:
             real_best[spec["name"]] = coded_to_real_value(best_point[spec["name"]], spec)
 
         st.write("Best real conditions:", real_best)
+
 
 
 
